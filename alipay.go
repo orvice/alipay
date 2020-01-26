@@ -3,6 +3,7 @@
 package alipay
 
 import (
+	"net/url"
 	"strconv"
 )
 
@@ -81,3 +82,53 @@ func (this *Client) Form(opts Options) string {
 	`
 }
 
+/* 生成支付宝即时到帐提交表单html代码 */
+func (this *Client) WebUrl(opts Options) string {
+	//实例化参数
+	param := &AlipayParameters{}
+	param.InputCharset = "utf-8"
+	param.Body = "为" + opts.NickName + "充值" + strconv.FormatFloat(float64(opts.Fee), 'f', 2, 32) + "元"
+	param.NotifyUrl = this.NotifyUrl
+	param.OutTradeNo = opts.OrderId
+	param.Partner = this.Partner
+	param.PaymentType = 1
+	param.ReturnUrl = this.ReturnUrl
+	param.SellerEmail = this.Email
+	param.Service = "create_direct_pay_by_user"
+	param.Subject = opts.Subject
+	param.TotalFee = opts.Fee
+
+	//生成签名
+	sign := sign(param)
+
+	//追加参数
+	param.Sign = sign
+	param.SignType = "MD5"
+
+	var baseUrl = "https://mapi.alipay.com/gateway.do"
+
+	var params = map[string]string{
+		"_input_charset": param.InputCharset,
+		"body":           param.Body,
+		"notify_url":     param.NotifyUrl,
+		"service":        param.Service,
+		"return_url":     param.ReturnUrl,
+		"seller_email":   param.SellerEmail,
+		"out_trade_no":   param.OutTradeNo,
+		"partner":        param.Partner,
+		"payment_type":   strconv.Itoa(int(param.PaymentType)),
+		"subject":        param.Subject,
+		"total_fee":      strconv.FormatFloat(float64(param.TotalFee), 'f', 2, 32),
+		"sign":           param.Sign,
+		"sign_type":      param.SignType,
+	}
+
+	vls := url.Values{}
+
+	for k,v := range params{
+		vls.Add(k,v)
+	}
+
+	finalUrl := baseUrl + vls.Encode()
+	return finalUrl
+}
