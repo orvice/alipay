@@ -105,7 +105,7 @@ func (this *Client) WebUrl(opts Options) string {
 	param.Sign = sign
 	param.SignType = "MD5"
 
-	var baseUrl = "https://mapi.alipay.com/gateway.do"
+	var baseUrl = "https://mapi.alipay.com/gateway.do?"
 
 	var params = map[string]string{
 		"_input_charset": param.InputCharset,
